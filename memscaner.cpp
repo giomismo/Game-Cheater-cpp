@@ -117,6 +117,20 @@ void int_to_char(int value, char return_char[]){
 	return_char[0] = value & 0x000000FF;
 }
 
+void fix_value_to_address(HANDLE pHandle,vector<long>* addresses, int value_to_set, int sleep_time_ms){
+	//TODO: Detect Ctrl+c and add CloseHandle
+	char value_to_set_buff[4];
+	int_to_char(value_to_set, value_to_set_buff);
+	unsigned char *value_in_memory = new unsigned char[4]();
+	while(1) {
+		ReadProcessMemory(pHandle, (LPCVOID)*addresses->begin(), value_in_memory, 4, 0);
+		if (*(DWORD*)value_in_memory != value_to_set) {
+			WriteProcessMemory(pHandle, (LPVOID)*addresses->begin(), &value_to_set_buff, 4, NULL);
+		}
+		Sleep(sleep_time_ms);
+	}	
+}
+
 int main() {
 	HANDLE pHandle = GetProcessHandle();
 	int val;
@@ -130,6 +144,7 @@ int main() {
 	cout << "\nEnter next value or -1 to exit: ";
 	std::cin >> val;
 	if (val == -1) {
+		CloseHandle(pHandle);
 		return -1;
 	}
 		
@@ -144,7 +159,8 @@ int main() {
     	ReScanMemmory(val, addresses, pHandle);
     	if (addresses->size() == 0){
     		cout << "No more items, exiting.";
-    		return -2;
+    		CloseHandle(pHandle);
+			return -2;
 		} else if (addresses->size() == 1) {
 			itoa(*addresses->begin(), addrHex, 16);
 			cout << "Address found! 0x" << addrHex << "(" << *addresses->begin() << ")";
@@ -153,20 +169,23 @@ int main() {
 		PrintVector(addresses, val);
 	}
 	
-	cout << "\nEnter value to freeze or -1 to exit: ";
-	std::cin >> val;
-	if (val == -1) {
-		return -1;
+	int option;
+	cout << "\nEnter 0 to exit, 1 to set the value one time, any other value to freeze it permanently: ";
+	std::cin >> option;
+	if (option == 0) {
+		CloseHandle(pHandle);
+		return 0;
 	}
-	char valBuff[4];
-	int_to_char(val, valBuff);
+	int value_to_set;
+	cout << "\nEnter value to set: ";
+	std::cin >> value_to_set;
 
-	unsigned char *dump = new unsigned char[4]();
-	while(1) {
-		ReadProcessMemory(pHandle,(LPCVOID)*addresses->begin(),dump,4,0);
-		if (*(DWORD*)dump != val) {
-			WriteProcessMemory(pHandle, (LPVOID)*addresses->begin(), &valBuff, 4, NULL);
-		}
-		Sleep(500);
+	if (option == 1){
+		char value_to_set_buff[4];
+		int_to_char(value_to_set, value_to_set_buff);
+		WriteProcessMemory(pHandle, (LPVOID)*addresses->begin(), &value_to_set_buff, 4, NULL);
+		CloseHandle(pHandle);
+	} else {
+		fix_value_to_address(pHandle, addresses, value_to_set, 500);
 	}
 }
