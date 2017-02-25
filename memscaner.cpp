@@ -31,28 +31,26 @@ HANDLE GetProcessHandle(){
 
 vector<long>* ScanMemmory(HANDLE pHandle, int value_to_find){
 	vector<long>* addresses = new vector<long>;
-
-    SYSTEM_INFO sysInfo = { 0 };
-    GetSystemInfo(&sysInfo);
- 
-    LONG aStart = (long)sysInfo.lpMinimumApplicationAddress;
-    LONG aEnd = (long)sysInfo.lpMaximumApplicationAddress;
-    cout << "Start: " << aStart << ". End: " << aEnd << "\n";
-    int found = 0;
+	int found = 0;
  	bool runThread = true;
  	char addrHex[20];
+ 	SYSTEM_INFO sysInfo = { 0 };
+    
+	GetSystemInfo(&sysInfo);
+    LONG aStart = (long)sysInfo.lpMinimumApplicationAddress;
+    LONG aEnd = (long)sysInfo.lpMaximumApplicationAddress;
+    cout << "Scanning memory from " << aStart << " to " << aEnd << "\n";
+
     do{
  
         while (aStart < aEnd){
             MEMORY_BASIC_INFORMATION mbi = { 0 };
             if (!VirtualQueryEx(pHandle, (LPCVOID)aStart, &mbi, sizeof(mbi))){
                 cout << "Cannot VirtualQueryEx. Error:" << GetLastError() << "\n";
-                CloseHandle(pHandle);
                 return addresses;         
             }
             
             if (mbi.State == MEM_COMMIT && ((mbi.Protect & PAGE_GUARD) == 0) && ((mbi.Protect == PAGE_NOACCESS) == 0)){
- 
                 BOOL isWritable = ((mbi.Protect & PAGE_READWRITE) != 0 || (mbi.Protect & PAGE_WRITECOPY) != 0 || (mbi.Protect & PAGE_EXECUTE_READWRITE) != 0 || (mbi.Protect & PAGE_EXECUTE_WRITECOPY) != 0);
                 if (isWritable){
  
@@ -62,7 +60,6 @@ vector<long>* ScanMemmory(HANDLE pHandle, int value_to_find){
                     for (int x = 0; x < mbi.RegionSize - 4; x += 1){
  						if (*(DWORD*)(dump + x) == value_to_find) {
  							itoa(aStart+x, addrHex, 16);
- 							//cout << "Address: 0x"<< addrHex << "\n";
  							addresses->push_back((int)(aStart+x));
  						}                                   
                     }
@@ -73,10 +70,6 @@ vector<long>* ScanMemmory(HANDLE pHandle, int value_to_find){
         }
         runThread = false;
     } while (runThread);
- 
-    if (runThread){     
-        CloseHandle(pHandle);         
-    }  
     return addresses;
 }
 
