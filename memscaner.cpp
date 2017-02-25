@@ -110,6 +110,13 @@ void PrintVector(vector<long>* addresses, int searched_value){
 	} 
 }
 
+void int_to_char(int value, char return_char[]){
+	return_char[3] = (value & 0xFF000000) >> 24;
+	return_char[2] = (value & 0x00FF0000) >> 16;
+	return_char[1] = (value & 0x0000FF00) >> 8;
+	return_char[0] = value & 0x000000FF;
+}
+
 int main() {
 	HANDLE pHandle = GetProcessHandle();
 	int val;
@@ -141,8 +148,25 @@ int main() {
 		} else if (addresses->size() == 1) {
 			itoa(*addresses->begin(), addrHex, 16);
 			cout << "Address found! 0x" << addrHex << "(" << *addresses->begin() << ")";
-			return 0;
+			break;
 		} 
 		PrintVector(addresses, val);
+	}
+	
+	cout << "\nEnter value to freeze or -1 to exit: ";
+	std::cin >> val;
+	if (val == -1) {
+		return -1;
+	}
+	char valBuff[4];
+	int_to_char(val, valBuff);
+
+	unsigned char *dump = new unsigned char[4]();
+	while(1) {
+		ReadProcessMemory(pHandle,(LPCVOID)*addresses->begin(),dump,4,0);
+		if (*(DWORD*)dump != val) {
+			WriteProcessMemory(pHandle, (LPVOID)*addresses->begin(), &valBuff, 4, NULL);
+		}
+		Sleep(500);
 	}
 }
