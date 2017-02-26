@@ -132,7 +132,7 @@ int get_pid_by_process_name(const char* process_name){
 }
 
 HANDLE get_handle_by_process_name(const char* process_name){
-	HANDLE pHandle;
+	HANDLE pHandle = NULL;
 	int pid = get_pid_by_process_name(process_name);
     if (pid >0){
     	pHandle = get_handle_by_process_id(pid);
@@ -141,17 +141,17 @@ HANDLE get_handle_by_process_name(const char* process_name){
 }
 
 HANDLE get_handle_by_window_title (LPCSTR window_name){
-	HANDLE pHandle;
+	HANDLE pHandle = NULL;
 	DWORD pid;
 	HWND hwnd;
     hwnd = FindWindow(NULL, window_name);
     
 	if(!hwnd) {
 		cout <<"Window not found!\n";
-		cin.get();
 		return pHandle;
 	}
 	GetWindowThreadProcessId(hwnd,&pid);
+	
 	return get_handle_by_process_id((unsigned int)pid);
 }
 
@@ -406,14 +406,12 @@ int main(int argc, char* argv[]) {
 	HANDLE pHandle = get_handle();
 	if(!pHandle) {
 		cout <<"Could not get handle!\n";
-		cin.get();
 		return -1;
 	}
 
 	vector<long>* addresses = get_addresses(pHandle);
 	if (addresses->size() == 0){
 		cout << "Cannot find addresses to edit!\n";
-		cin.get();
 		CloseHandle(pHandle);
 		return -2;
 	}
