@@ -31,7 +31,7 @@ There are more options pending to be added when I have time.
 There are a few examples:  
 * game_cheater.exe <- This will guide you step by step to specify process, address, value and operation mode  
 * game_cheater.exe -pn "bioshock.exe" -s 1234 -so <- Set the value 1234 to the process with name "bioshock.exe" once, address will be found through scan mode  
-* game_cheater.exe -pn "bioshock.exe" -a 0xdeadbeef -s 1234 -f <- This will be setting constantly the value 1234 on 0xdeadbeef address of process "bioshock.exe"  
+* game_cheater.exe -pn "bioshock.exe" -a 0xdeadbeef -s 1234 -sf <- This will be setting constantly the value 1234 on 0xdeadbeef address of process "bioshock.exe", without requiring user input  
 
 
 
